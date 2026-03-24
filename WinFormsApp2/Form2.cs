@@ -1,102 +1,108 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace WinFormsApp2
 {
     public partial class Form2 : Form
     {
         private string _Painter;
-
-
         private Form1 form1;
-
-        private int i = 1;
+        private int i = 0;
+        private List<string> images = new List<string>();
+        private string portraitPath;
 
         public Form2(Form1 form1, string painterName)
         {
-            txt - описание (richTextBox1.Text)
+            InitializeComponent();
 
-                файл с именем - портрет (pictureBox1.Image)
+            this.form1 = form1;
+            _Painter = painterName;
 
-                остальные изображения - картины (pictureBox2.Image)
-
-
-            string folderPath = _Painter;
+            string folderPath = Path.Combine(Application.StartupPath, _Painter);
 
             string txtFile = Directory.GetFiles(folderPath, "*.txt").FirstOrDefault();
 
-            InitializeComponent();
-            this.form1 = form1;
-            _Painter = painterName;
-            pictureBox1.Image = painterName;
-            pictureBox2.Image = 1 + painterName;
-            richTextBox1.Text = File.ReadAllText(painterName + ".txt");
+            richTextBox1.Text = File.ReadAllText(txtFile);
+
+            string[] files = Directory.GetFiles(folderPath);
+
+            portraitPath = files.FirstOrDefault(f =>
+                Path.GetFileNameWithoutExtension(f).Trim().ToLower() ==
+                _Painter.Trim().ToLower() &&
+                IsImage(f));
+
+            if (portraitPath != null)
+            {
+                pictureBox1.ImageLocation = portraitPath;
+            }
+
+
+            images = files
+                .Where(f => IsImage(f) && f != portraitPath)
+                .ToList();
+
+            if (images.Count > 0)
+            {
+                pictureBox2.ImageLocation = images[i];
+            }
 
         }
 
-        private void label1_Click(object sender, EventArgs e)
+        private bool IsImage(string path)
         {
-
-        }
-
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-
+            string ext = Path.GetExtension(path).ToLower();
+            return ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".bmp" || ext == ".gif";
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-
             form1.Show();
             this.Close();
-
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            if (i != 1)
+            if (images.Count == 0) 
             {
-                i -= 1;
-            }
-            else
-            {
-                i = 3;
+                return; 
             }
 
-            pictureBox2.ImageLocation = i.ToString() + _Painter + ".jpg";
+            if (i > 0)
+            {
+                i--;
+            }
+
+            else
+            {
+                i = images.Count - 1;
+            }
+
+
+            pictureBox2.ImageLocation = images[i];
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
-            if (i != 3)
+            if (images.Count == 0)
             {
-                i += 1;
+                return;
             }
+
+            if (i < images.Count - 1)
+            {
+                i++;
+            }
+
             else
             {
-                i = 1;
+                i = 0;
             }
 
-            pictureBox2.ImageLocation = i.ToString() + _Painter + ".jpg";
 
-        }
-
-        private void pictureBox2_Click(object sender, EventArgs e)
-        {
-
+            pictureBox2.ImageLocation = images[i];
         }
     }
 }
